@@ -4,7 +4,7 @@ from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import rsun, pi, sigma, au, msun
 from hyperion.util.functions import create_dir
 
-prefix = 'cyl_0.7.6'
+prefix = 'sph_0.7.6'
 
 create_dir('%s' % prefix)
 create_dir('%s/models' % prefix)
@@ -66,15 +66,16 @@ for disk_mass in [1.113838e-7, 1.113838e-6, 1.113838e-5, 1.113838e-4]:
     image.set_wavelength_range(61, 1, 61)
 
     m.set_raytracing(True)
-    m.set_n_temperature_iterations(5)
+    m.set_n_temperature_iterations(10)
+    m.set_convergence(True, percentile=99., absolute=2., relative=1.02)
 
-    # m.set_spherical_polar_grid_auto(499, 399, 1, rmax=1300.*au)
-    m.set_cylindrical_polar_grid_auto(399, 299, 1)
+    m.set_spherical_polar_grid_auto(499, 399, 1, rmax=1300.*au)
+    # m.set_cylindrical_polar_grid_auto(399, 299, 1)
 
     wavelengths = np.loadtxt('paper_results/wavelengths.txt')
     m.set_monochromatic(True, wavelengths=wavelengths)
 
-    m.set_n_photons(temperature=1000000, imaging_mono_sources=100000, imaging_mono_dust=100000,
+    m.set_n_photons(temperature=10000000, imaging_mono_sources=100000, imaging_mono_dust=100000,
                 raytracing_sources=1000000, raytracing_dust=1000000,
                 stats=1000)
 

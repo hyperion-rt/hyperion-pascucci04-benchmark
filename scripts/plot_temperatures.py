@@ -9,7 +9,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
 
-prefix = 'cyl_0.7.6'
+prefix = 'sph_0.7.6'
 
 # Set matplotlib preferences
 mpl.rc('axes', titlesize='x-small')
@@ -68,9 +68,9 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
     elif code=='HYPERION':
 
         f = h5py.File('%s/models/pascucci_1.1e-04.rtout' % prefix)
-        temperature = f['Iteration 00005/temperature'][0,0,:,:]
+        temperature = f['Iteration 00004/temperature'][0,0,:,:]
 
-        f = h5py.File('models/pascucci_1.1e-04.rtin')
+        f = h5py.File('%s/models/pascucci_1.1e-04.rtin' % prefix)
         r = f['Grid/Geometry/Walls 1']['r']
         t = f['Grid/Geometry/Walls 2']['t']
 
