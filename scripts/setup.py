@@ -34,13 +34,13 @@ for disk_mass in [1.113838e-7, 1.113838e-6, 1.113838e-5, 1.113838e-4]:
     # Disk mass (dust!) = 1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4
 
     disk = m.add_flared_disk()
-    disk.p = -0.125 # needs fixing
+    disk.p = 0.125
     disk.beta = 1.125
     disk.mass = disk_mass * msun
     disk.rmin = 1. * au
     disk.rmax = 1000. * au
-    disk.h_0 = 125 * au
-    disk.r_0 = 500 * au * np.sqrt(2. / pi)
+    disk.h_0 = 125 * au * np.sqrt(2. / pi)
+    disk.r_0 = 500 * au
     # disk.cylindrical_inner_rim = False
 
     # Dust:
@@ -58,12 +58,12 @@ for disk_mass in [1.113838e-7, 1.113838e-6, 1.113838e-5, 1.113838e-4]:
     theta = np.array([12.5, 42.5, 77.5])
     phi = np.array([30.0, 30.0, 30.0])
 
-    image1 = m.add_peeled_images()
-    image1.set_viewing_angles(theta, phi)
-    image1.set_image_size(1, 1)
-    image1.set_image_limits(-1500.*au, 1500.*au, -1500.*au, 1500.*au)
-    image1.set_aperture_range(1, 1500.*au, 1500.*au)
-    image1.set_wavelength_range(61, 1, 61)
+    image = m.add_peeled_images()
+    image.set_viewing_angles(theta, phi)
+    image.set_image_size(1, 1)
+    image.set_image_limits(-1500.*au, 1500.*au, -1500.*au, 1500.*au)
+    image.set_aperture_range(1, 1500.*au, 1500.*au)
+    image.set_wavelength_range(61, 1, 61)
 
     m.set_raytracing(True)
     m.set_n_temperature_iterations(5)
