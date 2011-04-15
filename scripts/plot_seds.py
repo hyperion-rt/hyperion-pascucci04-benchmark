@@ -9,7 +9,7 @@ from hyperion.util.constants import rsun, pi, c
 from hyperion.util.integrate import interp1d_log10
 from hyperion.util.functions import B_nu
 
-prefix = 'sph_0.7.6'
+prefix = 'sph_0.7.7'
 
 # Set matplotlib preferences
 mpl.rc('axes', titlesize='x-small')
