@@ -100,6 +100,9 @@ r_steinray, radial_steinray, t_steinray, vertical_steinray = read_temperature('S
 r_mc3d, radial_mc3d, t_mc3d, vertical_mc3d = read_temperature('MC3D', 'tau-T100.020', 0, 0)
 r_hyperion, radial_hyperion, t_hyperion, vertical_hyperion = read_temperature('HYPERION', 'temperature_005.fits.gz', 0, 0)
 
+# Last hyperion value overlaps a bit over the edge of the disk, so the interpolated temperature is unreliable
+r_hyperion, radial_hyperion = r_hyperion[:-1], radial_hyperion[:-1]
+
 # Start figure
 fig = mpl.figure(figsize=(6.5, 2.5))
 artists = []
