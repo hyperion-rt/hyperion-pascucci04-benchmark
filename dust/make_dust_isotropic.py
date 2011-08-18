@@ -29,6 +29,6 @@ kappa = kappa_i(wav)
 albedo = albedo_i(wav)
 
 d = IsotropicSphericalDust(wav, kappa, albedo)
-d._extrapolate(1.e-3, 1.e5)
+d.optical_properties._extrapolate(1.e-3, 1.e5)
 d.plot('pascucci_dust_isotropic.png')
 d.write('pascucci_dust_isotropic.hdf5')

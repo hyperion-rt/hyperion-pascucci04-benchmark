@@ -3,13 +3,14 @@ from scipy.interpolate import interp1d
 from hyperion.util.constants import au, pi
 import h5py
 from hyperion.util.integrate import interp1d_log10
+from hyperion.model import Model
 from scipy.interpolate import RectBivariateSpline
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
 
-prefix = 'sph_0.7.7'
+prefix = 'sph_0.8.3'
 
 # Set matplotlib preferences
 mpl.rc('axes', titlesize='x-small')
@@ -67,10 +68,10 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
 
     elif code=='HYPERION':
 
-        f = h5py.File('%s/models/pascucci_1.1e-04.rtout' % prefix)
-        temperature = f['Iteration 00004/temperature'][0,0,:,:]
+        m = Model('%s/models/pascucci_1.1e-04' % prefix)
+        temperature = m.get_physical_grid('temperature')[0][0,:,:]
 
-        f = h5py.File('%s/models/pascucci_1.1e-04.rtin' % prefix)
+        f = h5py.File('%s/models/pascucci_1.1e-04.rtin' % prefix, 'r')
         r = f['Grid/Geometry/Walls 1']['r']
         t = f['Grid/Geometry/Walls 2']['t']
 
