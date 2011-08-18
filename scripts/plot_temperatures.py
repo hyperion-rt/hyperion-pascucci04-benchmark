@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
 
-prefix = 'sph_0.8.3'
+prefix = 'sph_0.8.4'
 
 # Set matplotlib preferences
 mpl.rc('axes', titlesize='x-small')

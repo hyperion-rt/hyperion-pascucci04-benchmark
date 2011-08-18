@@ -4,7 +4,7 @@ from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import rsun, pi, sigma, au, msun
 from hyperion.util.functions import create_dir
 
-prefix = 'sph_0.8.3'
+prefix = 'sph_0.8.4'
 
 create_dir('%s' % prefix)
 create_dir('%s/models' % prefix)
