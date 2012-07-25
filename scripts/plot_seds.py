@@ -1,15 +1,23 @@
+import sys, os
+
+prefix, output = sys.argv[1:3]
+
+if not os.path.exists(prefix):
+    raise Exception("No such directory: %s" % prefix)
+
+if not os.path.exists(output):
+    raise Exception("No such directory: %s" % output)
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
 
 import numpy as np
 
-from hyperion.model import AnalyticalYSOModel
+from hyperion.model import ModelOutput
 from hyperion.util.constants import rsun, pi, c
-from hyperion.util.integrate import interp1d_log10
+from hyperion.util.integrate import interp1d_fast_loglog
 from hyperion.util.functions import B_nu
-
-prefix = 'sph_0.8.4'
 
 # Set matplotlib preferences
 mpl.rc('axes', titlesize='x-small')
@@ -73,13 +81,13 @@ def get_sed(filename, inclination=0):
     if 'RADICAL' in filename:
         sed = seds[inclination] / (4.*pi*rsun**2)
     elif 'MC3D' in filename:
-        sed = interp1d_log10(wav, seds[inclination]*wav*10./rsun**2)
+        sed = seds[inclination]*wav*10./rsun**2
     elif 'MCTRANS' in filename:
-        sed = interp1d_log10(wav, seds[inclination]*wav*1000.)
+        sed = seds[inclination]*wav*1000.
     elif 'RADMC' in filename:
-        sed = interp1d_log10(wav, seds[inclination] / (4.*pi*rsun**2))
+        sed = seds[inclination] / (4.*pi*rsun**2)
     elif 'STEINRAY' in filename:
-        sed = interp1d_log10(wav, seds[inclination]*1000.*pi)
+        sed = seds[inclination]*1000.*pi
 
     return wav, sed
 
@@ -113,7 +121,7 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
         ax = fig.add_axes([xmin, ymin, dx, dy])
 
         # Get Hyperion SED
-        m = AnalyticalYSOModel(name='%s/models/pascucci_%7.1e' % (prefix,disk_mass))
+        m = ModelOutput('%s/models/pascucci_%7.1e.rtout' % (prefix,disk_mass))
         wav_hyperion, sed_hyperion = m.get_sed(inclination=j, distance=rsun)
         sed_hyperion = sed_hyperion[0]
 
@@ -124,11 +132,16 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
         wav_radmc, sed_radmc = get_sed('paper_results/RADMC/%s/sp' % radical[i], inclination=j)
         wav_steinray, sed_steinray = get_sed('paper_results/STEINRAY/%s/sp' % radical[i], inclination=j)
 
+        sed_mc3d = interp1d_fast_loglog(wav_mc3d, sed_mc3d, wav_radical)
+        sed_mctrans = interp1d_fast_loglog(wav_mctrans, sed_mctrans, wav_radical)
+        sed_radmc = interp1d_fast_loglog(wav_radmc, sed_radmc, wav_radical)
+        sed_steinray = interp1d_fast_loglog(wav_steinray, sed_steinray, wav_radical)
+
         # Plot differences
-        ax.plot(wav_radical, (sed_mc3d(wav_radical)-sed_radical)/sed_radical*100., color='gray', lw=0.5)
-        ax.plot(wav_radical, (sed_mctrans(wav_radical)-sed_radical)/sed_radical*100., color='gray', lw=0.5)#, ls='dashdot')
-        ax.plot(wav_radical, (sed_radmc(wav_radical)-sed_radical)/sed_radical*100., color='gray', lw=0.5)#, ls='dotted')
-        ax.plot(wav_radical, (sed_steinray(wav_radical)-sed_radical)/sed_radical*100., color='gray', lw=0.5)#, ls='dashed')
+        ax.plot(wav_radical, (sed_mc3d-sed_radical)/sed_radical*100., color='gray', lw=0.5)
+        ax.plot(wav_radical, (sed_mctrans-sed_radical)/sed_radical*100., color='gray', lw=0.5)#, ls='dashdot')
+        ax.plot(wav_radical, (sed_radmc-sed_radical)/sed_radical*100., color='gray', lw=0.5)#, ls='dotted')
+        ax.plot(wav_radical, (sed_steinray-sed_radical)/sed_radical*100., color='gray', lw=0.5)#, ls='dashed')
         ax.plot(wav_radical, (sed_hyperion-sed_radical)/sed_radical*100., color='black', lw=1.)
 
         # X-axis
@@ -156,7 +169,7 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
 
         # Plot SEDs
         ax2.scatter(wav_radical, sed_radical, color='gray', marker='o', lw=0, s=5, edgecolor='none')
-        ax2.loglog(wav_radical, sed_hyperion, color='black', marker='-', lw=0.5)
+        ax2.loglog(wav_radical, sed_hyperion, 'k-', lw=0.5)
 
     # Plot stellar photosphere
     nu_radical = c/(wav_radical*1.e-4)
@@ -178,4 +191,4 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
     ax2.text(0.975, 0.95, r'$\tau_{V}=%g$' % (10.**(i-1)), ha='right', va='top', transform = ax2.transAxes, size='small')
 
 # Save plot
-fig.savefig('plots/seds.eps', bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/seds.eps' % output, bbox_inches='tight', bbox_extra_artists=artists)

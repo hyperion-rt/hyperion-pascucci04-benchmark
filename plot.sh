@@ -1,6 +1,14 @@
 #!/bin/bash
 
-rm plots/*
+VERSION="0.8.10"
 
-python scripts/plot_seds.py
-python scripts/plot_temperatures.py
+if [ ! -d "plots_sph_$VERSION" ]; then
+  mkdir "plots_sph_$VERSION"
+else
+  rm plots_sph_$VERSION/*
+fi
+
+python scripts/plot_seds.py "sph_$VERSION" "plots_sph_$VERSION"
+
+python scripts/plot_temperatures.py "sph_$VERSION" "plots_sph_$VERSION"
+

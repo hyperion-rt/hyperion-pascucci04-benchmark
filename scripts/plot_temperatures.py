@@ -1,16 +1,23 @@
+import sys, os
+
+prefix, output = sys.argv[1:3]
+
+if not os.path.exists(prefix):
+    raise Exception("No such directory: %s" % prefix)
+
+if not os.path.exists(output):
+    raise Exception("No such directory: %s" % output)
+
 import numpy as np
-from scipy.interpolate import interp1d
 from hyperion.util.constants import au, pi
 import h5py
-from hyperion.util.integrate import interp1d_log10
-from hyperion.model import Model
+from hyperion.util.integrate import interp1d_fast, interp1d_fast_loglog
+from hyperion.model import ModelOutput
 from scipy.interpolate import RectBivariateSpline
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as mpl
-
-prefix = 'sph_0.8.4'
 
 # Set matplotlib preferences
 mpl.rc('axes', titlesize='x-small')
@@ -68,12 +75,11 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
 
     elif code=='HYPERION':
 
-        m = Model('%s/models/pascucci_1.1e-04' % prefix)
-        temperature = m.get_physical_grid('temperature')[0][0,:,:]
-
-        f = h5py.File('%s/models/pascucci_1.1e-04.rtin' % prefix, 'r')
-        r = f['Grid/Geometry/Walls 1']['r']
-        t = f['Grid/Geometry/Walls 2']['t']
+        m = ModelOutput('%s/models/pascucci_1.1e-04.rtout' % prefix)
+        grid = m.get_quantities()
+        temperature = grid['temperature'][0].array[0, :, :]
+        r = grid.r_wall
+        t = grid.t_wall
 
         r = np.array(0.5*(r[1:] + r[:-1])).astype(np.float64)
         t = np.array(0.5*(t[1:] + t[:-1])).astype(np.float64)
@@ -137,13 +143,13 @@ ymin = ymargin
 
 ax = fig.add_axes([xmin, ymin, dx, dy])
 
-radial_steinray = interp1d_log10(r_steinray, radial_steinray, bounds_error=False)
-radial_mc3d = interp1d_log10(r_mc3d, radial_mc3d, bounds_error=False)
-radial_hyperion = interp1d_log10(r_hyperion, radial_hyperion, bounds_error=False)
+radial_steinray = interp1d_fast_loglog(r_steinray, radial_steinray, r_radical, bounds_error=False)
+radial_mc3d = interp1d_fast_loglog(r_mc3d, radial_mc3d, r_radical, bounds_error=False)
+radial_hyperion = interp1d_fast_loglog(r_hyperion, radial_hyperion, r_radical, bounds_error=False)
 
-ax.plot(r_radical, (radial_steinray(r_radical)-radial_radical)/radial_radical*100., color='gray', lw=0.5)
-ax.plot(r_radical, (radial_mc3d(r_radical)- radial_radical)/radial_radical*100., color='gray', lw=0.5)
-ax.plot(r_radical, (radial_hyperion(r_radical)-radial_radical)/radial_radical*100., color='black', lw=1.0)
+ax.plot(r_radical, (radial_steinray-radial_radical)/radial_radical*100., color='gray', lw=0.5)
+ax.plot(r_radical, (radial_mc3d- radial_radical)/radial_radical*100., color='gray', lw=0.5)
+ax.plot(r_radical, (radial_hyperion-radial_radical)/radial_radical*100., color='black', lw=1.0)
 
 ax.set_xscale('log')
 ax.set_xlim(1., 1000.)
@@ -184,13 +190,13 @@ ymin = ymargin
 
 ax = fig.add_axes([xmin, ymin, dx, dy])
 
-vertical_steinray = interp1d(t_steinray, vertical_steinray, bounds_error=False)
-vertical_mc3d = interp1d(t_mc3d, vertical_mc3d, bounds_error=False)
-vertical_hyperion = interp1d(t_hyperion, vertical_hyperion, bounds_error=False)
+vertical_steinray = interp1d_fast(t_steinray, vertical_steinray, t_radical, bounds_error=False)
+vertical_mc3d = interp1d_fast(t_mc3d, vertical_mc3d, t_radical, bounds_error=False)
+vertical_hyperion = interp1d_fast(t_hyperion, vertical_hyperion, t_radical, bounds_error=False)
 
-ax.plot(t_radical, (vertical_steinray(t_radical)-vertical_radical)/vertical_radical*100., color='gray',lw=0.5)
-ax.plot(t_radical, (vertical_mc3d(t_radical)- vertical_radical)/vertical_radical*100., color='gray',lw=0.5)
-ax.plot(t_radical, (vertical_hyperion(t_radical)-vertical_radical)/vertical_radical*100., color='black',lw=1.0)
+ax.plot(t_radical, (vertical_steinray-vertical_radical)/vertical_radical*100., color='gray',lw=0.5)
+ax.plot(t_radical, (vertical_mc3d- vertical_radical)/vertical_radical*100., color='gray',lw=0.5)
+ax.plot(t_radical, (vertical_hyperion-vertical_radical)/vertical_radical*100., color='black',lw=1.0)
 
 ax.set_xlim(-40., 40.)
 ax.xaxis.set_ticks([-40., -20., 0., 20., 40.])
@@ -202,4 +208,4 @@ ax.yaxis.set_ticks([-10., 0., 10.])
 artist = ax.text(-0.13, 0.5, r'Difference (\%)', rotation='vertical', ha='center', va='center', transform=ax.transAxes, size='x-small')
 artists.append(artist)
 
-fig.savefig('plots/temperatures.eps', bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/temperatures.eps' % output, bbox_inches='tight', bbox_extra_artists=artists)
