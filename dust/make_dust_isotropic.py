@@ -1,10 +1,9 @@
-from hyperion.dust import IsotropicSphericalDust
-from hyperion.util.constants import pi
-
 import numpy as np
-np.seterr(all='ignore')
 
-from hyperion.util.integrate import interp1d_log10
+from hyperion.dust import IsotropicDust
+from hyperion.util.constants import pi, c
+
+from hyperion.util.integrate import interp1d_fast_loglog
 
 data = np.loadtxt('optSi.dat', comments=';', dtype=[('wav', float), ('csca', float), ('cext', float)])
 
@@ -15,20 +14,19 @@ data['csca'] *= 1.e4
 size = 0.12 * 1.e-4
 density = 3.6
 wav = data['wav']
+nu = c / (wav * 1.e-4)
 kappa = data['cext'] / (4. * pi / 3. * size**3. * density)
 albedo = data['csca'] / data['cext']
 
-kappa_i = interp1d_log10(wav, kappa)
-albedo_i = interp1d_log10(wav, albedo)
+wav_new = np.logspace(np.log10(wav.min()), np.log10(wav.max()),1000)
+wav_new[0] = 0.12
+wav_new[-1] = 2000.
 
-wav = np.logspace(np.log10(wav.min()), np.log10(wav.max()),1000)
-wav[0] = 0.12
-wav[-1] = 2000.
+kappa = interp1d_fast_loglog(wav, kappa, wav_new)
+albedo = interp1d_fast_loglog(wav, albedo, wav_new)
+nu = c / (wav_new * 1.e-4)
 
-kappa = kappa_i(wav)
-albedo = albedo_i(wav)
-
-d = IsotropicSphericalDust(wav, kappa, albedo)
+d = IsotropicDust(nu[::-1], albedo[::-1], kappa[::-1])
 d.optical_properties._extrapolate(1.e-3, 1.e5)
 d.plot('pascucci_dust_isotropic.png')
 d.write('pascucci_dust_isotropic.hdf5')
