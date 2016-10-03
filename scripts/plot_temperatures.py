@@ -64,7 +64,7 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
 
     if code=='MC3D':
 
-        f = file('paper_results/%s/100tau/%s' % (code, filename))
+        f = open('paper_results/%s/100tau/%s' % (code, filename))
         f.readline()
         nr = int(f.readline().strip()) - 1
         nt = int(float(f.readline().strip()))

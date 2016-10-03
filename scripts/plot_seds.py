@@ -46,7 +46,7 @@ dy = (0.5 - 2 * ymargin) / 6.
 
 def get_sed(filename, inclination=0):
 
-    f = file(filename)
+    f = open(filename)
     if 'RADICAL' in filename:
         n_wav = int(f.readline())
         n_seds = int(f.readline())

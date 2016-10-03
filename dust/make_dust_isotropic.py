@@ -27,6 +27,6 @@ albedo = interp1d_fast_loglog(wav, albedo, wav_new)
 nu = c / (wav_new * 1.e-4)
 
 d = IsotropicDust(nu[::-1], albedo[::-1], kappa[::-1])
-d.optical_properties._extrapolate(1.e-3, 1.e5)
+d.optical_properties.extrapolate_wav(1.e-3, 1.e5)
 d.plot('pascucci_dust_isotropic.png')
 d.write('pascucci_dust_isotropic.hdf5')
