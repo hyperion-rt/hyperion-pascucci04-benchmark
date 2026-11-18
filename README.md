@@ -42,7 +42,7 @@ of order 4 to 6 CPU hours per model.
 A subset of the results can be requested by giving the files to produce, for
 example:
 
-    snakemake 0.9.12/sph/plots/temperatures.eps
+    snakemake 0.9.12/sph/plots/temperatures.png
 
 Any files to produce have to be given before `--config` on the command line.
 
@@ -51,7 +51,7 @@ also be run on a cylindrical polar grid (which requires `hyperion_cyl_mpi`),
 but since the temperature plot only supports the spherical polar grid, the
 cylindrical models and SED plot are only made if explicitly requested:
 
-    snakemake 0.9.12/cyl/plots/seds.eps
+    snakemake 0.9.12/cyl/plots/seds.png
 
 By default each model is run with as many MPI processes as there are cores on
 the machine. To use fewer, either limit the cores available to Snakemake with
@@ -75,7 +75,7 @@ To remake a plot, either force the rule that makes it, which is one of
 
 or give the file and use `--force`:
 
-    snakemake 0.9.12/sph/plots/seds.eps --force
+    snakemake 0.9.12/sph/plots/seds.png --force
 
 Alternatively, delete the plots to remake and run `snakemake` again, which
 only produces the files that are missing.
