@@ -21,3 +21,17 @@ profiles:
       imaging_dust: 100_000
       raytracing_sources: 1_000_000
       raytracing_dust: 1_000_000
+
+  # Much cheaper settings that are only intended to check that the whole
+  # workflow runs. The results are noisy and the temperatures are not
+  # converged, so they should not be used to judge the agreement with the
+  # other codes.
+  fast:
+    grid: [99, 79]
+    n_initial_iterations: 2
+    n_photons:
+      initial: 100_000
+      imaging_sources: 2_000
+      imaging_dust: 2_000
+      raytracing_sources: 10_000
+      raytracing_dust: 10_000
