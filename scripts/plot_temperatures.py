@@ -94,7 +94,7 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
         t = radical['t'].reshape(nr, nt)[0,:]
         temperature = radical['temperature']
 
-        if code is 'STEINRAY':
+        if code == 'STEINRAY':
             r *= 100
 
         temperature = temperature.reshape(nr, nt)
