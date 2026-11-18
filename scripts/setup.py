@@ -1,13 +1,13 @@
+import os
+
 import numpy as np
 
 from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import rsun, pi, sigma, au, msun
-from hyperion.util.functions import create_dir
 
 prefix = 'sph_0.8.10'
 
-create_dir('%s' % prefix)
-create_dir('%s/models' % prefix)
+os.makedirs('%s/models' % prefix, exist_ok=True)
 
 for disk_mass in [1.113838e-7, 1.113838e-6, 1.113838e-5, 1.113838e-4]:
 
