@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.8.10"
+VERSION="0.9.12"
 
 if [ ! -d "plots_sph_$VERSION" ]; then
   mkdir "plots_sph_$VERSION"

@@ -5,7 +5,7 @@ import numpy as np
 from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import rsun, pi, sigma, au, msun
 
-prefix = 'cyl_0.8.4'
+prefix = 'cyl_0.9.12'
 
 os.makedirs('%s/models' % prefix, exist_ok=True)
 
