@@ -31,6 +31,7 @@ else:
 RUN = LABEL + "/{geometry}"
 PLOTS = RUN + "/plots"
 
+GEOMETRIES = ["sph", "cyl"]
 MASSES = ["1.1e-07", "1.1e-06", "1.1e-05", "1.1e-04"]
 FORMATS = ["png", "pdf"]
 
@@ -40,15 +41,11 @@ wildcard_constraints:
     mass=r"1\.1e-0[4-7]",
 
 
-# The benchmark is run on a spherical polar grid. The models can also be set
-# up on a cylindrical polar grid, but the temperature plot only supports the
-# spherical polar grid, so the cylindrical models and SED plot are only made
-# if explicitly requested, e.g. with: snakemake 0.9.12/cyl/plots/seds.png
 rule all:
     input:
         expand(
             PLOTS + "/{plot}.{ext}",
-            geometry="sph",
+            geometry=GEOMETRIES,
             plot=["seds", "temperatures"],
             ext=FORMATS,
         ),
@@ -95,11 +92,11 @@ rule plot_seds:
 # The temperature plot only uses the most optically thick model
 rule plot_temperatures:
     input:
-        LABEL + "/sph/models/pascucci_1.1e-04.rtout",
+        RUN + "/models/pascucci_1.1e-04.rtout",
     output:
-        expand(LABEL + "/sph/plots/temperatures.{ext}", ext=FORMATS),
+        expand(PLOTS + "/temperatures.{ext}", ext=FORMATS, allow_missing=True),
     params:
-        run=LABEL + "/sph",
-        plots=LABEL + "/sph/plots",
+        run=RUN,
+        plots=PLOTS,
     shell:
         "python scripts/plot_temperatures.py {params.run} {params.plots}"

@@ -8,8 +8,8 @@ the other codes in `paper_results/`.
 
 ## Requirements
 
-- The Hyperion Python package and the MPI version of the Fortran binary for
-  spherical polar grids (`hyperion_sph_mpi`), with the binary on the `PATH`
+- The Hyperion Python package and the MPI versions of the Fortran binaries
+  (`hyperion_sph_mpi` and `hyperion_cyl_mpi`), with the binaries on the `PATH`
 - `mpirun`
 - [Snakemake](https://snakemake.github.io) 8 or later
 - SciPy
@@ -27,7 +27,7 @@ minutes in total on 8 cores:
     snakemake --config profile=fast
 
 All the output is written to a directory named after the version, with the
-plots in e.g. `0.9.12/sph/plots`. The fast results are written to a separate
+plots for each grid geometry in e.g. `0.9.12/sph/plots`. The fast results are written to a separate
 directory ending in `_fast` (for example `0.9.12_fast`). They are noisy and
 the temperatures are not converged, so they are only useful for testing the
 workflow and not for judging the agreement with the other codes.
@@ -36,7 +36,8 @@ To run the full benchmark:
 
     snakemake
 
-There are four models, one for each optical depth, and the 0.8.10 runs took
+There are eight models (four optical depths for each of the spherical and
+cylindrical polar grids), and the 0.8.10 runs on the spherical polar grid took
 of order 4 to 6 CPU hours per model.
 
 A subset of the results can be requested by giving the files to produce, for
@@ -45,13 +46,6 @@ example:
     snakemake 0.9.12/sph/plots/temperatures.png
 
 Any files to produce have to be given before `--config` on the command line.
-
-The benchmark is run on a spherical polar grid by default. The models can
-also be run on a cylindrical polar grid (which requires `hyperion_cyl_mpi`),
-but since the temperature plot only supports the spherical polar grid, the
-cylindrical models and SED plot are only made if explicitly requested:
-
-    snakemake 0.9.12/cyl/plots/seds.png
 
 By default each model is run with as many MPI processes as there are cores on
 the machine. To use fewer, either limit the cores available to Snakemake with
@@ -68,12 +62,13 @@ Since editing a script does not cause anything to be re-run, a plot has to be
 explicitly remade after changing one of the plotting scripts. None of the
 following re-run the models, provided that the model output is already there.
 
-To remake a plot, either force the rule that makes it, which is one of
-`plot_seds` or `plot_temperatures`:
+To remake one kind of plot for both grid geometries, force the rule that makes
+it, which is one of `plot_seds` or `plot_temperatures`:
 
     snakemake --forcerun plot_seds
 
-or give the file and use `--force`:
+To remake the plots for a single grid geometry, give one of the files and use
+`--force`:
 
     snakemake 0.9.12/sph/plots/seds.png --force
 
