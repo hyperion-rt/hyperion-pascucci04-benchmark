@@ -191,4 +191,5 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
     ax2.text(0.975, 0.95, r'$\tau_{V}=%g$' % (10.**(i-1)), ha='right', va='top', transform = ax2.transAxes, size='small')
 
 # Save plot
-fig.savefig('%s/seds.eps' % output, bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/seds.png' % output, bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/seds.pdf' % output, bbox_inches='tight', bbox_extra_artists=artists)

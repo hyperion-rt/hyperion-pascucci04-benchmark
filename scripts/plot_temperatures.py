@@ -13,6 +13,7 @@ from hyperion.util.constants import au, pi
 import h5py
 from hyperion.util.integrate import interp1d_fast, interp1d_fast_loglog
 from hyperion.model import ModelOutput
+from hyperion.grid import CylindricalPolarGrid
 from scipy.interpolate import RectBivariateSpline
 
 import matplotlib
@@ -42,21 +43,30 @@ ymargin = 0.05
 dx = 0.5 - 2 * xmargin
 dy = (1.0 - 2 * ymargin) / 3.
 
-def make_cuts(r, t, temperature):
+def make_cuts(x, y, temperature, cylindrical=False):
 
-    temperature_interp = RectBivariateSpline(r, t, temperature, kx=1, ky=1)
+    # The temperature is given as a function of (r, theta) by default, or as
+    # a function of (w, z) if cylindrical is set
+
+    temperature_interp = RectBivariateSpline(x, y, temperature, kx=1, ky=1)
 
     rcyl = np.ones(100) * 2*au
     zcyl = np.linspace(-2*au, 2*au, 100)
     rsph1 = np.sqrt(rcyl*rcyl + zcyl*zcyl)
     tsph1 = np.arctan2(rcyl, zcyl)
 
-    vertical = temperature_interp.ev(rsph1, tsph1)
+    if cylindrical:
+        vertical = temperature_interp.ev(rcyl, zcyl)
+    else:
+        vertical = temperature_interp.ev(rsph1, tsph1)
 
     rsph2 = np.logspace(np.log10(1.*au), np.log10(1000*au), 100)
     tsph2 = np.ones(100) * np.radians(92.5)
 
-    radial = temperature_interp.ev(rsph2, tsph2)
+    if cylindrical:
+        radial = temperature_interp.ev(rsph2 * np.sin(tsph2), rsph2 * np.cos(tsph2))
+    else:
+        radial = temperature_interp.ev(rsph2, tsph2)
 
     return rsph2/au, radial, 90.-np.degrees(tsph1), vertical
 
@@ -78,12 +88,23 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
         m = ModelOutput('%s/models/pascucci_1.1e-04.rtout' % prefix)
         grid = m.get_quantities()
         temperature = grid['temperature'][0].array[0, :, :]
+        temperature = np.array(temperature).astype(np.float64).transpose()
+
+        if isinstance(grid, CylindricalPolarGrid):
+
+            w = grid.w_wall
+            z = grid.z_wall
+
+            w = np.array(0.5*(w[1:] + w[:-1])).astype(np.float64)
+            z = np.array(0.5*(z[1:] + z[:-1])).astype(np.float64)
+
+            return make_cuts(w, z, temperature, cylindrical=True)
+
         r = grid.r_wall
         t = grid.t_wall
 
         r = np.array(0.5*(r[1:] + r[:-1])).astype(np.float64)
         t = np.array(0.5*(t[1:] + t[:-1])).astype(np.float64)
-        temperature = np.array(temperature).astype(np.float64).transpose()
 
     else:
 
@@ -208,4 +229,5 @@ ax.yaxis.set_ticks([-10., 0., 10.])
 artist = ax.text(-0.13, 0.5, r'Difference (\%)', rotation='vertical', ha='center', va='center', transform=ax.transAxes, size='x-small')
 artists.append(artist)
 
-fig.savefig('%s/temperatures.eps' % output, bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/temperatures.png' % output, bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/temperatures.pdf' % output, bbox_inches='tight', bbox_extra_artists=artists)
