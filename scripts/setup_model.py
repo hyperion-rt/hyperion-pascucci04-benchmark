@@ -1,12 +1,18 @@
+# Set up one of the Pascucci et al. (2004) benchmark models, which computes the
+# temperatures and the SEDs at the benchmark wavelengths (in monochromatic
+# mode). The disk mass and grid geometry come from the Snakemake wildcards,
+# and the settings that differ between profiles come from config.yaml and are
+# passed in by the Snakefile.
+
 import numpy as np
 
 from hyperion.model import AnalyticalYSOModel
-from hyperion.util.constants import rsun, pi, sigma, au, msun
+from hyperion.util.constants import pi, au, msun
 
-# The settings that differ between the full and fast runs come from the
-# profile selected in config.yaml, and are passed in by the Snakefile.
+from common import WAVELENGTHS, set_star, add_sed
 
 settings = snakemake.params.settings
+geometry = snakemake.wildcards.geometry
 
 # Disk masses (in solar masses) for each of the model names
 
@@ -19,15 +25,7 @@ disk_mass = DISK_MASSES[snakemake.wildcards.mass]
 
 m = AnalyticalYSOModel()
 
-# Star:
-#
-# T_star = 5,800K
-# R_star = R_sun
-# M_star = M_sun
-
-m.star.radius = 1. # = 1 cm (i.e. point source)
-m.star.temperature = 5800.
-m.star.luminosity = 4. * pi * rsun**2 * sigma * 5800.**4
+set_star(m.star)
 
 # Disk:
 #
@@ -35,7 +33,7 @@ m.star.luminosity = 4. * pi * rsun**2 * sigma * 5800.**4
 # h(r) = zd * (r/rd)^1.125
 # rd = rmax / 2.
 # zd = rmax / 8.
-# r_in = 1AU, r_out = 1000AU\
+# r_in = 1AU, r_out = 1000AU
 # Sharp vertical edges in cylindrical polar coordinates
 # Disk mass (dust!) = 1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4
 
@@ -55,30 +53,19 @@ disk.r_0 = 500 * au
 
 disk.dust = 'dust/pascucci_dust_isotropic.hdf5'
 
-# SEDs/Images:
-#
-# cos(i) = 0.05 to 0.95 in steps of 0.1
-# Images computed at 1 micron
-# 251 pixels/900 AU across, at 140 pc
-
-theta = np.array([12.5, 42.5, 77.5])
-phi = np.array([30.0, 30.0, 30.0])
-
-image = m.add_peeled_images()
-image.set_viewing_angles(theta, phi)
-image.set_image_size(1, 1)
-image.set_image_limits(-1500.*au, 1500.*au, -1500.*au, 1500.*au)
-image.set_aperture_range(1, 1500.*au, 1500.*au)
-image.set_wavelength_range(61, 1, 61)
+image = add_sed(m)
+image.set_wavelength_range(len(WAVELENGTHS), 1, len(WAVELENGTHS))
 
 m.set_raytracing(True)
 m.set_n_initial_iterations(settings['n_initial_iterations'])
 m.set_convergence(True, percentile=99., absolute=2., relative=1.02)
 
-m.set_cylindrical_polar_grid_auto(*settings['grid'], 1)
+if geometry == 'sph':
+    m.set_spherical_polar_grid_auto(*settings['grid'], 1, rmax=1300.*au)
+else:
+    m.set_cylindrical_polar_grid_auto(*settings['grid'], 1)
 
-wavelengths = np.loadtxt('paper_results/wavelengths.txt')
-m.set_monochromatic(True, wavelengths=wavelengths)
+m.set_monochromatic(True, wavelengths=WAVELENGTHS)
 
 m.set_n_photons(**settings['n_photons'])
 

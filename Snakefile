@@ -60,7 +60,7 @@ rule setup_model:
     params:
         settings=SETTINGS,
     script:
-        "scripts/setup_{wildcards.geometry}.py"
+        "scripts/setup_model.py"
 
 
 rule run_hyperion:
