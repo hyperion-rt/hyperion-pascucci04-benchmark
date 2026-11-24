@@ -9,7 +9,7 @@ import numpy as np
 from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import pi, au, msun
 
-from common import WAVELENGTHS, set_star, add_sed, set_output
+from common import DUST_FILE, WAVELENGTHS, set_star, add_sed, write
 
 settings = snakemake.params.settings
 geometry = snakemake.wildcards.geometry
@@ -47,11 +47,7 @@ disk.h_0 = 125 * au * np.sqrt(2. / pi)
 disk.r_0 = 500 * au
 # disk.cylindrical_inner_rim = False
 
-# Dust:
-#
-# Spherical grains, 1 micron, 3.5g/cm^3
-
-disk.dust = 'dust/pascucci_dust_isotropic.hdf5'
+disk.dust = DUST_FILE
 
 image = add_sed(m)
 image.set_wavelength_range(len(WAVELENGTHS), 1, len(WAVELENGTHS))
@@ -69,6 +65,4 @@ m.set_monochromatic(True, wavelengths=WAVELENGTHS)
 
 m.set_n_photons(**settings['n_photons'])
 
-set_output(m)
-
-m.write(snakemake.output[0])
+write(m, snakemake.output[0])

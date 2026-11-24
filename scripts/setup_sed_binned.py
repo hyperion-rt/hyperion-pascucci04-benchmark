@@ -5,7 +5,7 @@
 # wavelengths. The settings that differ between profiles come from
 # config.yaml and are passed in by the Snakefile.
 
-from common import model_from_temperatures, add_sed, set_binned_sed_wavelengths
+from common import model_from_temperatures, add_sed, set_binned_sed_wavelengths, write
 
 settings = snakemake.params.settings
 
@@ -18,4 +18,4 @@ m.set_raytracing(True)
 
 m.set_n_photons(**settings['n_photons'])
 
-m.write(snakemake.output[0])
+write(m, snakemake.output[0])
