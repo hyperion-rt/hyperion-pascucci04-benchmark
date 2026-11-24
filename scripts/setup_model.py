@@ -9,7 +9,7 @@ import numpy as np
 from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import pi, au, msun
 
-from common import WAVELENGTHS, set_star, add_sed
+from common import WAVELENGTHS, set_star, add_sed, set_output
 
 settings = snakemake.params.settings
 geometry = snakemake.wildcards.geometry
@@ -68,5 +68,7 @@ else:
 m.set_monochromatic(True, wavelengths=WAVELENGTHS)
 
 m.set_n_photons(**settings['n_photons'])
+
+set_output(m)
 
 m.write(snakemake.output[0])
