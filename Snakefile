@@ -38,6 +38,7 @@ FORMATS = ["png", "pdf"]
 
 wildcard_constraints:
     geometry="sph|cyl",
+    kind="models|models_binned",
     mass=r"1\.1e-0[4-7]",
 
 
@@ -46,7 +47,7 @@ rule all:
         expand(
             PLOTS + "/{plot}.{ext}",
             geometry=GEOMETRIES,
-            plot=["seds", "temperatures"],
+            plot=["seds", "seds_binned", "temperatures"],
             ext=FORMATS,
         ),
 
@@ -60,16 +61,30 @@ rule setup_model:
     params:
         settings=SETTINGS,
     script:
-        "scripts/setup_{wildcards.geometry}.py"
+        "scripts/setup_model.py"
+
+
+# The SEDs are also computed in the normal (non-monochromatic) mode for each
+# model, re-using the temperatures from the model
+rule setup_sed_binned:
+    input:
+        model=RUN + "/models/pascucci_{mass}.rtout",
+        wavelengths="paper_results/wavelengths.txt",
+    output:
+        RUN + "/models_binned/pascucci_{mass}.rtin",
+    params:
+        settings=SETTINGS["binned"],
+    script:
+        "scripts/setup_sed_binned.py"
 
 
 rule run_hyperion:
     input:
-        RUN + "/models/pascucci_{mass}.rtin",
+        RUN + "/{kind}/pascucci_{mass}.rtin",
     output:
-        RUN + "/models/pascucci_{mass}.rtout",
+        RUN + "/{kind}/pascucci_{mass}.rtout",
     log:
-        RUN + "/models/pascucci_{mass}.log",
+        RUN + "/{kind}/pascucci_{mass}.log",
     threads: MPI_PROCESSES
     resources:
         mpi_jobs=1,
@@ -87,6 +102,18 @@ rule plot_seds:
         plots=PLOTS,
     shell:
         "python scripts/plot_seds.py {params.run} {params.plots}"
+
+
+rule plot_seds_binned:
+    input:
+        expand(RUN + "/models_binned/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
+    output:
+        expand(PLOTS + "/seds_binned.{ext}", ext=FORMATS, allow_missing=True),
+    params:
+        run=RUN,
+        plots=PLOTS,
+    shell:
+        "python scripts/plot_seds.py {params.run} {params.plots} models_binned"
 
 
 # The temperature plot only uses the most optically thick model

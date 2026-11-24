@@ -6,6 +6,13 @@ benchmark with the [Hyperion](http://www.hyperion-rt.org) radiative transfer
 code, and to compare the resulting temperatures and SEDs to the results from
 the other codes in `paper_results/`.
 
+The benchmark defines the SEDs at specific wavelengths, so the SEDs are
+computed in Hyperion's monochromatic mode (plotted in `seds.png`). The SEDs of
+each model are also computed a second time in the normal (non-monochromatic)
+mode, re-using the temperatures, with the SEDs binned in wavelength and
+interpolated to the benchmark wavelengths (plotted in `seds_binned.png`), to
+check that this mode also agrees with the other codes.
+
 ## Requirements
 
 - The Hyperion Python package and the MPI versions of the Fortran binaries
@@ -27,8 +34,8 @@ minutes in total on 8 cores:
     snakemake --config profile=fast
 
 All the output is written to a directory named after the version, with the
-plots for each grid geometry in e.g. `0.9.12/sph/plots`. The fast results are written to a separate
-directory ending in `_fast` (for example `0.9.12_fast`). They are noisy and
+plots for each grid geometry in e.g. `v1.0.0b2/sph/plots`. The fast results are written to a separate
+directory ending in `_fast` (for example `v1.0.0b2_fast`). They are noisy and
 the temperatures are not converged, so they are only useful for testing the
 workflow and not for judging the agreement with the other codes.
 
@@ -43,7 +50,7 @@ of order 4 to 6 CPU hours per model.
 A subset of the results can be requested by giving the files to produce, for
 example:
 
-    snakemake 0.9.12/sph/plots/temperatures.png
+    snakemake v1.0.0b2/sph/plots/temperatures.png
 
 Any files to produce have to be given before `--config` on the command line.
 
@@ -63,7 +70,7 @@ other requirements, for example with [Podman](https://podman.io). The version
 of Hyperion to build is set with `HYPERION_REF`, which can be a tag, a branch
 or a commit, and defaults to `main`:
 
-    podman build --build-arg HYPERION_REF=v0.9.12 -t hyperion-benchmark:0.9.12 .
+    podman build --build-arg HYPERION_REF=v1.0.0b2 -t hyperion-benchmark:v1.0.0b2 .
 
 If `HYPERION_REF` is a branch, building again re-uses the previous build
 rather than picking up new commits, so in that case either add `--no-cache` or
@@ -74,7 +81,7 @@ The benchmark is not included in the image, so the repository has to be
 mounted when running the workflow, and the output is then written to the
 repository as usual:
 
-    podman run --rm -it --shm-size=2g -v $PWD:/work:Z hyperion-benchmark:0.9.12 \
+    podman run --rm -it --shm-size=2g -v $PWD:/work:Z hyperion-benchmark:v1.0.0b2 \
         snakemake --config profile=fast
 
 The `--shm-size` option is needed because the default amount of shared memory
@@ -88,14 +95,14 @@ explicitly remade after changing one of the plotting scripts. None of the
 following re-run the models, provided that the model output is already there.
 
 To remake one kind of plot for both grid geometries, force the rule that makes
-it, which is one of `plot_seds` or `plot_temperatures`:
+it, which is one of `plot_seds`, `plot_seds_binned` or `plot_temperatures`:
 
     snakemake --forcerun plot_seds
 
 To remake the plots for a single grid geometry, give one of the files and use
 `--force`:
 
-    snakemake 0.9.12/sph/plots/seds.png --force
+    snakemake v1.0.0b2/sph/plots/seds.png --force
 
 Alternatively, delete the plots to remake and run `snakemake` again, which
 only produces the files that are missing.

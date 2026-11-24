@@ -1,3 +1,4 @@
 old
 pascucci_dust
 .snakemake
+__pycache__

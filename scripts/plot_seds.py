@@ -1,6 +1,20 @@
+# Plot the SEDs of the four models against the results from the other codes.
+#
+# Usage: python plot_seds.py RUN_DIRECTORY PLOT_DIRECTORY [models|models_binned]
+#
+# By default this uses the monochromatic SEDs of the models. With
+# models_binned, it uses the SEDs computed in the normal (non-monochromatic)
+# mode, which are binned in wavelength and are interpolated (in log-log space)
+# to the benchmark wavelengths, and the plots are written to seds_binned
+# instead of seds.
+
 import sys, os
 
 prefix, output = sys.argv[1:3]
+kind = sys.argv[3] if len(sys.argv) > 3 else 'models'
+
+if kind not in ('models', 'models_binned'):
+    raise Exception("Unknown kind of SED: %s" % kind)
 
 if not os.path.exists(prefix):
     raise Exception("No such directory: %s" % prefix)
@@ -121,7 +135,7 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
         ax = fig.add_axes([xmin, ymin, dx, dy])
 
         # Get Hyperion SED
-        m = ModelOutput('%s/models/pascucci_%7.1e.rtout' % (prefix,disk_mass))
+        m = ModelOutput('%s/%s/pascucci_%7.1e.rtout' % (prefix, kind, disk_mass))
         wav_hyperion, sed_hyperion = m.get_sed(inclination=j, distance=rsun)
         sed_hyperion = sed_hyperion[0]
 
@@ -136,6 +150,13 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
         sed_mctrans = interp1d_fast_loglog(wav_mctrans, sed_mctrans, wav_radical)
         sed_radmc = interp1d_fast_loglog(wav_radmc, sed_radmc, wav_radical)
         sed_steinray = interp1d_fast_loglog(wav_steinray, sed_steinray, wav_radical)
+
+        # Interpolate binned SEDs to the benchmark wavelengths (the bins with
+        # no flux are left out)
+        if kind == 'models_binned':
+            keep = sed_hyperion > 0
+            order = np.argsort(wav_hyperion[keep])
+            sed_hyperion = interp1d_fast_loglog(wav_hyperion[keep][order], sed_hyperion[keep][order], wav_radical)
 
         # Plot differences
         ax.plot(wav_radical, (sed_mc3d-sed_radical)/sed_radical*100., color='gray', lw=0.5)
@@ -191,5 +212,6 @@ for i, disk_mass in enumerate([1.1e-7, 1.1e-6, 1.1e-5, 1.1e-4]):
     ax2.text(0.975, 0.95, r'$\tau_{V}=%g$' % (10.**(i-1)), ha='right', va='top', transform = ax2.transAxes, size='small')
 
 # Save plot
-fig.savefig('%s/seds.png' % output, bbox_inches='tight', bbox_extra_artists=artists)
-fig.savefig('%s/seds.pdf' % output, bbox_inches='tight', bbox_extra_artists=artists)
+name = 'seds' if kind == 'models' else 'seds_binned'
+fig.savefig('%s/%s.png' % (output, name), bbox_inches='tight', bbox_extra_artists=artists)
+fig.savefig('%s/%s.pdf' % (output, name), bbox_inches='tight', bbox_extra_artists=artists)
