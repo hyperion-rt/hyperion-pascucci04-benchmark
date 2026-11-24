@@ -9,6 +9,12 @@ mpi_processes: all
 
 # Settings that control the cost of the runs. The profile to use is selected
 # on the command line with e.g. --config profile=fast, and defaults to full.
+#
+# In each profile, binned gives the numbers of photons for computing the SEDs
+# of each model a second time in the normal (non-monochromatic) mode,
+# re-using the temperatures, with the SEDs binned in wavelength and
+# interpolated to the benchmark wavelengths. The number of imaging photons for
+# these is the total over all wavelengths.
 profiles:
 
   # The settings used for the published benchmark results.
@@ -21,6 +27,11 @@ profiles:
       imaging_dust: 100_000
       raytracing_sources: 1_000_000
       raytracing_dust: 1_000_000
+    binned:
+      n_photons:
+        imaging: 10_000_000
+        raytracing_sources: 1_000_000
+        raytracing_dust: 1_000_000
 
   # Much cheaper settings that are only intended to check that the whole
   # workflow runs. The results are noisy and the temperatures are not
@@ -35,3 +46,8 @@ profiles:
       imaging_dust: 2_000
       raytracing_sources: 10_000
       raytracing_dust: 10_000
+    binned:
+      n_photons:
+        imaging: 200_000
+        raytracing_sources: 10_000
+        raytracing_dust: 10_000

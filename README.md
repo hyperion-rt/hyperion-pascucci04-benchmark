@@ -6,6 +6,13 @@ benchmark with the [Hyperion](http://www.hyperion-rt.org) radiative transfer
 code, and to compare the resulting temperatures and SEDs to the results from
 the other codes in `paper_results/`.
 
+The benchmark defines the SEDs at specific wavelengths, so the SEDs are
+computed in Hyperion's monochromatic mode (plotted in `seds.png`). The SEDs of
+each model are also computed a second time in the normal (non-monochromatic)
+mode, re-using the temperatures, with the SEDs binned in wavelength and
+interpolated to the benchmark wavelengths (plotted in `seds_binned.png`), to
+check that this mode also agrees with the other codes.
+
 ## Requirements
 
 - The Hyperion Python package and the MPI versions of the Fortran binaries
@@ -88,7 +95,7 @@ explicitly remade after changing one of the plotting scripts. None of the
 following re-run the models, provided that the model output is already there.
 
 To remake one kind of plot for both grid geometries, force the rule that makes
-it, which is one of `plot_seds` or `plot_temperatures`:
+it, which is one of `plot_seds`, `plot_seds_binned` or `plot_temperatures`:
 
     snakemake --forcerun plot_seds
 
