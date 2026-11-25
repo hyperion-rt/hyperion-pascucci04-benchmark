@@ -6,10 +6,11 @@ benchmark with the [Hyperion](http://www.hyperion-rt.org) radiative transfer
 code, and to compare the resulting temperatures and SEDs to the results from
 the other codes in `paper_results/`.
 
-The benchmark defines the SEDs at specific wavelengths, so the SEDs are
-computed in Hyperion's monochromatic mode (plotted in `seds.png`). The SEDs of
-each model are also computed a second time in the normal (non-monochromatic)
-mode, re-using the temperatures, with the SEDs binned in wavelength and
+The temperatures of each model are computed first, and the SEDs are then
+computed by separate runs that re-use these temperatures. The benchmark
+defines the SEDs at specific wavelengths, so the SEDs are computed in
+Hyperion's monochromatic mode (plotted in `seds.png`). They are also computed
+in the normal (non-monochromatic) mode, with the SEDs binned in wavelength and
 interpolated to the benchmark wavelengths (plotted in `seds_binned.png`), to
 check that this mode also agrees with the other codes.
 
@@ -44,13 +45,17 @@ To run the full benchmark:
     snakemake
 
 There are eight models (four optical depths for each of the spherical and
-cylindrical polar grids), and the 0.8.10 runs on the spherical polar grid took
-of order 4 to 6 CPU hours per model.
+cylindrical polar grids), each of which has a run to compute the
+monochromatic SEDs and one to compute the binned SEDs. The 0.8.10 runs on the
+spherical polar grid, which computed the temperatures and monochromatic SEDs
+together, took of order 4 to 6 CPU hours per model.
 
 A subset of the results can be requested by giving the files to produce, for
 example:
 
     snakemake v1.0.0b2/sph/plots/temperatures.png
+
+which only computes the temperatures, the quickest way to check them.
 
 Any files to produce have to be given before `--config` on the command line.
 

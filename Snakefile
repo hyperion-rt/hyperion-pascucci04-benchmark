@@ -38,7 +38,7 @@ FORMATS = ["png", "pdf"]
 
 wildcard_constraints:
     geometry="sph|cyl",
-    kind="models|models_binned",
+    kind="models|seds_monochromatic|seds_binned",
     mass=r"1\.1e-0[4-7]",
 
 
@@ -52,16 +52,30 @@ rule all:
         ),
 
 
-rule setup_model:
+# The models compute the temperatures, which are re-used by the SED runs
+rule setup_temperatures:
     input:
         dust="dust/pascucci_dust_isotropic.hdf5",
-        wavelengths="paper_results/wavelengths.txt",
     output:
         RUN + "/models/pascucci_{mass}.rtin",
     params:
-        settings=SETTINGS,
+        settings=SETTINGS["temperatures"],
     script:
-        "scripts/setup_model.py"
+        "scripts/setup_temperatures.py"
+
+
+# The SEDs are computed at the benchmark wavelengths in monochromatic mode for
+# each model, re-using the temperatures from the model
+rule setup_sed_monochromatic:
+    input:
+        model=RUN + "/models/pascucci_{mass}.rtout",
+        wavelengths="paper_results/wavelengths.txt",
+    output:
+        RUN + "/seds_monochromatic/pascucci_{mass}.rtin",
+    params:
+        settings=SETTINGS["seds_monochromatic"],
+    script:
+        "scripts/setup_sed_monochromatic.py"
 
 
 # The SEDs are also computed in the normal (non-monochromatic) mode for each
@@ -71,9 +85,9 @@ rule setup_sed_binned:
         model=RUN + "/models/pascucci_{mass}.rtout",
         wavelengths="paper_results/wavelengths.txt",
     output:
-        RUN + "/models_binned/pascucci_{mass}.rtin",
+        RUN + "/seds_binned/pascucci_{mass}.rtin",
     params:
-        settings=SETTINGS["binned"],
+        settings=SETTINGS["seds_binned"],
     script:
         "scripts/setup_sed_binned.py"
 
@@ -99,26 +113,26 @@ rule run_hyperion:
 
 rule plot_seds:
     input:
-        expand(RUN + "/models/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
+        expand(RUN + "/seds_monochromatic/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
     output:
         expand(PLOTS + "/seds.{ext}", ext=FORMATS, allow_missing=True),
     params:
         run=RUN,
         plots=PLOTS,
     shell:
-        "python scripts/plot_seds.py {params.run} {params.plots}"
+        "python scripts/plot_seds.py {params.run} {params.plots} seds_monochromatic"
 
 
 rule plot_seds_binned:
     input:
-        expand(RUN + "/models_binned/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
+        expand(RUN + "/seds_binned/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
     output:
         expand(PLOTS + "/seds_binned.{ext}", ext=FORMATS, allow_missing=True),
     params:
         run=RUN,
         plots=PLOTS,
     shell:
-        "python scripts/plot_seds.py {params.run} {params.plots} models_binned"
+        "python scripts/plot_seds.py {params.run} {params.plots} seds_binned"
 
 
 # The temperature plot only uses the most optically thick model
