@@ -38,7 +38,7 @@ FORMATS = ["png", "pdf"]
 
 wildcard_constraints:
     geometry="sph|cyl",
-    kind="models|models_binned",
+    kind="models_temperatures|models_seds_monochromatic|models_seds_binned",
     mass=r"1\.1e-0[4-7]",
 
 
@@ -52,32 +52,49 @@ rule all:
         ),
 
 
-rule setup_model:
+# The models compute the temperatures, which are re-used by the SED runs
+rule setup_temperatures:
     input:
         dust="dust/pascucci_dust_isotropic.hdf5",
+    output:
+        RUN + "/models_temperatures/pascucci_{mass}.rtin",
+    params:
+        settings=SETTINGS["temperatures"],
+    script:
+        "scripts/setup_temperatures.py"
+
+
+# The SEDs are computed at the benchmark wavelengths in monochromatic mode for
+# each model, re-using the temperatures from the model
+rule setup_sed_monochromatic:
+    input:
+        model=RUN + "/models_temperatures/pascucci_{mass}.rtout",
         wavelengths="paper_results/wavelengths.txt",
     output:
-        RUN + "/models/pascucci_{mass}.rtin",
+        RUN + "/models_seds_monochromatic/pascucci_{mass}.rtin",
     params:
-        settings=SETTINGS,
+        settings=SETTINGS["seds_monochromatic"],
     script:
-        "scripts/setup_model.py"
+        "scripts/setup_sed_monochromatic.py"
 
 
 # The SEDs are also computed in the normal (non-monochromatic) mode for each
 # model, re-using the temperatures from the model
 rule setup_sed_binned:
     input:
-        model=RUN + "/models/pascucci_{mass}.rtout",
+        model=RUN + "/models_temperatures/pascucci_{mass}.rtout",
         wavelengths="paper_results/wavelengths.txt",
     output:
-        RUN + "/models_binned/pascucci_{mass}.rtin",
+        RUN + "/models_seds_binned/pascucci_{mass}.rtin",
     params:
-        settings=SETTINGS["binned"],
+        settings=SETTINGS["seds_binned"],
     script:
         "scripts/setup_sed_binned.py"
 
 
+# Hyperion is run from the directory containing the input file, since the
+# output file links to the input file using the path given on the command
+# line, and the link then works from any directory
 rule run_hyperion:
     input:
         RUN + "/{kind}/pascucci_{mass}.rtin",
@@ -89,37 +106,39 @@ rule run_hyperion:
     resources:
         mpi_jobs=1,
     shell:
-        "mpirun -n {threads} hyperion_{wildcards.geometry}_mpi {input} {output} > {log} 2>&1"
+        "cd $(dirname {input}) && "
+        "mpirun -n {threads} hyperion_{wildcards.geometry}_mpi "
+        "$(basename {input}) $(basename {output}) > $(basename {log}) 2>&1"
 
 
 rule plot_seds:
     input:
-        expand(RUN + "/models/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
+        expand(RUN + "/models_seds_monochromatic/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
     output:
         expand(PLOTS + "/seds.{ext}", ext=FORMATS, allow_missing=True),
     params:
         run=RUN,
         plots=PLOTS,
     shell:
-        "python scripts/plot_seds.py {params.run} {params.plots}"
+        "python scripts/plot_seds.py {params.run} {params.plots} models_seds_monochromatic"
 
 
 rule plot_seds_binned:
     input:
-        expand(RUN + "/models_binned/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
+        expand(RUN + "/models_seds_binned/pascucci_{mass}.rtout", mass=MASSES, allow_missing=True),
     output:
         expand(PLOTS + "/seds_binned.{ext}", ext=FORMATS, allow_missing=True),
     params:
         run=RUN,
         plots=PLOTS,
     shell:
-        "python scripts/plot_seds.py {params.run} {params.plots} models_binned"
+        "python scripts/plot_seds.py {params.run} {params.plots} models_seds_binned"
 
 
 # The temperature plot only uses the most optically thick model
 rule plot_temperatures:
     input:
-        RUN + "/models/pascucci_1.1e-04.rtout",
+        RUN + "/models_temperatures/pascucci_1.1e-04.rtout",
     output:
         expand(PLOTS + "/temperatures.{ext}", ext=FORMATS, allow_missing=True),
     params:

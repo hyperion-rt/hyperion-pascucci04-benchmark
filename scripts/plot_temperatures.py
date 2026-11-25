@@ -85,7 +85,7 @@ def read_temperature(code, filename, nr, nt, skiprows=0):
 
     elif code=='HYPERION':
 
-        m = ModelOutput('%s/models/pascucci_1.1e-04.rtout' % prefix)
+        m = ModelOutput('%s/models_temperatures/pascucci_1.1e-04.rtout' % prefix)
         grid = m.get_quantities()
         temperature = grid['temperature'][0].array[0, :, :]
         temperature = np.array(temperature).astype(np.float64).transpose()

@@ -6,10 +6,11 @@ benchmark with the [Hyperion](http://www.hyperion-rt.org) radiative transfer
 code, and to compare the resulting temperatures and SEDs to the results from
 the other codes in `paper_results/`.
 
-The benchmark defines the SEDs at specific wavelengths, so the SEDs are
-computed in Hyperion's monochromatic mode (plotted in `seds.png`). The SEDs of
-each model are also computed a second time in the normal (non-monochromatic)
-mode, re-using the temperatures, with the SEDs binned in wavelength and
+The temperatures of each model are computed first, and the SEDs are then
+computed by separate runs that re-use these temperatures. The benchmark
+defines the SEDs at specific wavelengths, so the SEDs are computed in
+Hyperion's monochromatic mode (plotted in `seds.png`). They are also computed
+in the normal (non-monochromatic) mode, with the SEDs binned in wavelength and
 interpolated to the benchmark wavelengths (plotted in `seds_binned.png`), to
 check that this mode also agrees with the other codes.
 
@@ -34,8 +35,8 @@ minutes in total on 8 cores:
     snakemake --config profile=fast
 
 All the output is written to a directory named after the version, with the
-plots for each grid geometry in e.g. `v1.0.0b2/sph/plots`. The fast results are written to a separate
-directory ending in `_fast` (for example `v1.0.0b2_fast`). They are noisy and
+plots for each grid geometry in e.g. `v1.0.0b3/sph/plots`. The fast results are written to a separate
+directory ending in `_fast` (for example `v1.0.0b3_fast`). They are noisy and
 the temperatures are not converged, so they are only useful for testing the
 workflow and not for judging the agreement with the other codes.
 
@@ -44,13 +45,17 @@ To run the full benchmark:
     snakemake
 
 There are eight models (four optical depths for each of the spherical and
-cylindrical polar grids), and the 0.8.10 runs on the spherical polar grid took
-of order 4 to 6 CPU hours per model.
+cylindrical polar grids), each of which has a run to compute the
+monochromatic SEDs and one to compute the binned SEDs. The 0.8.10 runs on the
+spherical polar grid, which computed the temperatures and monochromatic SEDs
+together, took of order 4 to 6 CPU hours per model.
 
 A subset of the results can be requested by giving the files to produce, for
 example:
 
-    snakemake v1.0.0b2/sph/plots/temperatures.png
+    snakemake v1.0.0b3/sph/plots/temperatures.png
+
+which only computes the temperatures, the quickest way to check them.
 
 Any files to produce have to be given before `--config` on the command line.
 
@@ -70,7 +75,7 @@ other requirements, for example with [Podman](https://podman.io). The version
 of Hyperion to build is set with `HYPERION_REF`, which can be a tag, a branch
 or a commit, and defaults to `main`:
 
-    podman build --build-arg HYPERION_REF=v1.0.0b2 -t hyperion-benchmark:v1.0.0b2 .
+    podman build --build-arg HYPERION_REF=v1.0.0b3 -t hyperion-benchmark:v1.0.0b3 .
 
 If `HYPERION_REF` is a branch, building again re-uses the previous build
 rather than picking up new commits, so in that case either add `--no-cache` or
@@ -81,7 +86,7 @@ The benchmark is not included in the image, so the repository has to be
 mounted when running the workflow, and the output is then written to the
 repository as usual:
 
-    podman run --rm -it --shm-size=2g -v $PWD:/work:Z hyperion-benchmark:v1.0.0b2 \
+    podman run --rm -it --shm-size=2g -v $PWD:/work:Z hyperion-benchmark:v1.0.0b3 \
         snakemake --config profile=fast
 
 The `--shm-size` option is needed because the default amount of shared memory
@@ -102,7 +107,7 @@ it, which is one of `plot_seds`, `plot_seds_binned` or `plot_temperatures`:
 To remake the plots for a single grid geometry, give one of the files and use
 `--force`:
 
-    snakemake v1.0.0b2/sph/plots/seds.png --force
+    snakemake v1.0.0b3/sph/plots/seds.png --force
 
 Alternatively, delete the plots to remake and run `snakemake` again, which
 only produces the files that are missing.

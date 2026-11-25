@@ -1,15 +1,15 @@
 # Set up one of the Pascucci et al. (2004) benchmark models, which computes the
-# temperatures and the SEDs at the benchmark wavelengths (in monochromatic
-# mode). The disk mass and grid geometry come from the Snakemake wildcards,
-# and the settings that differ between profiles come from config.yaml and are
-# passed in by the Snakefile.
+# temperatures. The SEDs are computed by separate runs that re-use these
+# temperatures. The disk mass and grid geometry come from the Snakemake
+# wildcards, and the settings that differ between profiles come from
+# config.yaml and are passed in by the Snakefile.
 
 import numpy as np
 
 from hyperion.model import AnalyticalYSOModel
 from hyperion.util.constants import pi, au, msun
 
-from common import WAVELENGTHS, set_star, add_sed, set_output
+from common import DUST_FILE, set_star, write
 
 settings = snakemake.params.settings
 geometry = snakemake.wildcards.geometry
@@ -47,16 +47,8 @@ disk.h_0 = 125 * au * np.sqrt(2. / pi)
 disk.r_0 = 500 * au
 # disk.cylindrical_inner_rim = False
 
-# Dust:
-#
-# Spherical grains, 1 micron, 3.5g/cm^3
+disk.dust = DUST_FILE
 
-disk.dust = 'dust/pascucci_dust_isotropic.hdf5'
-
-image = add_sed(m)
-image.set_wavelength_range(len(WAVELENGTHS), 1, len(WAVELENGTHS))
-
-m.set_raytracing(True)
 m.set_n_initial_iterations(settings['n_initial_iterations'])
 m.set_convergence(True, percentile=99., absolute=2., relative=1.02)
 
@@ -65,10 +57,7 @@ if geometry == 'sph':
 else:
     m.set_cylindrical_polar_grid_auto(*settings['grid'], 1)
 
-m.set_monochromatic(True, wavelengths=WAVELENGTHS)
+# Only the temperatures are computed, so no photons are needed for imaging
+m.set_n_photons(imaging=0, **settings['n_photons'])
 
-m.set_n_photons(**settings['n_photons'])
-
-set_output(m)
-
-m.write(snakemake.output[0])
+write(m, snakemake.output[0])
